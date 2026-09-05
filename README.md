@@ -1,6 +1,6 @@
 # The pure session: why the best agent run is the one you never talk to
 
-> 🧮 **Cost to read this: about 4,600 words, or 20 minutes and a coffee.** ☕ Your agent does not read this file. It reads `BLUEPRINT.md`, about 6,500 tokens, and will be done before the coffee cools.
+> 🧮 **Cost to read this: about 5,000 words, or 22 minutes and a coffee.** ☕ Your agent does not read this file. It reads `BLUEPRINT.md`, about 6,500 tokens, and will be done before the coffee cools.
 
 I was talking to a friend the other day about the setup I use to run coding agents. A ticket goes in one end and a reviewed PR comes out the other, and I am not in the middle. He was impressed, and then he asked how to build it himself.
 
