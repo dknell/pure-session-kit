@@ -68,7 +68,7 @@ That usually means:
 
 **The standing rules are already on disk.** In Claude Code that is CLAUDE.md. In Codex it is AGENTS.md. This is where conventions live: branch naming, commit format, what never to touch, how to report back. The agent reads it at the start of every session, so I never have to explain it in chat.
 
-**The why is on disk too.** Architecture, decisions, runbooks, coding standards. They live in a searchable vault of markdown next to the code, not in the rules file. The rules point at it. Nothing copies it. That is what keeps the rules file small. More on the vault [below](#vault).
+**The why is on disk too.** Architecture, decisions, runbooks, coding standards. They live in a searchable vault of markdown next to the code, not in the rules file. None of it loads at session start. The rules point at it, and the agent pulls in one file when it needs it. That is what keeps the rules file small. More on the vault [below](#vault).
 
 **The decisions are already made.** Most of them live in [the ticket](#ticket). If I know the agent is going to hit a fork in the road, I answer it in the prompt. And I tell it what to do when it hits one I did not predict: state the assumption, keep going, and flag it in the final report. An agent that stops to ask me a question is an agent that is now waiting on a human, and my answer costs context.
 
@@ -182,7 +182,7 @@ So it lives in a vault. Plain markdown files, tracked in git, in their own repo 
 
 Two reasons it is a separate repo and not a `docs/` folder. PRs to the code repo stay lean, with no doc churn mixed into the diff. And one vault can serve several repos.
 
-The agent does not load any of this at session start. It gets one pointer in the standing rules: here is the vault, read the architecture doc first, and if the vault is missing, stop. After that it searches the vault the way it searches code, with ripgrep, and reads only the file it needs.
+**None of it is read into context when a session starts.** Not one file. This is the part that matters. The standing rules carry one pointer: here is the vault, read the architecture doc before you start work, and if the vault is missing, stop. Even the architecture doc is read on demand, when the work begins, not imported at launch. After that the agent searches the vault the way it searches code, with ripgrep, and pulls in only the file it needs, only when it needs it. A vault with 300 documents costs the same at session start as a vault with 3: nothing.
 
 That is how my standing rules stay under 200 lines. Everything that would have gone in there went into the vault instead, where it costs nothing until it is needed.
 

@@ -42,7 +42,7 @@ The kit is written against one setup: Claude Code, git with GitHub, Linear, and 
 
 ### 1. The vault: architecture, decisions, runbooks, standards
 
-The vault is where the why lives, so the standing rules can stay short. It is plain markdown, tracked in git, searchable with ripgrep. Nothing in it loads at session start. The agent reads the one architecture doc first and then reads other files only when it needs them.
+The vault is where the why lives, so the standing rules can stay short. It is plain markdown, tracked in git, searchable with ripgrep. Nothing in it loads at session start. Not the architecture doc, not the ADRs, not the standards. The agent reads the architecture doc on demand when work begins, and reads any other file only when it needs it.
 
 **Detect before you build.** Look for docs that already exist: a sibling docs repo, a `docs/` folder, an Obsidian vault, ADRs anywhere, a wiki export. If markdown docs exist on disk, wire them in and do not restructure them. If the docs live only in a hosted tool the agent cannot search with ripgrep, such as Notion or Confluence, do not make the agent search that tool at run time. Its API responses are heavy and its search is weak. Build the vault skeleton, tell the human which pages to export to markdown into it, and leave a note in the architecture doc pointing at the hosted source until that is done. If nothing exists, create the skeleton.
 
@@ -69,6 +69,7 @@ The vault is where the why lives, so the standing rules can stay short. It is pl
 **Rules the rest of the kit follows.**
 
 - The standing rules carry one pointer: the vault path, the instruction to read `architecture/architecture.md` before working, and the instruction to stop if the vault is missing.
+- The vault is never loaded into context at session start. No `@` import of a vault file in the rules, no rule that reads a folder wholesale, no session start hook that prints vault contents. One file at a time, on demand, by search.
 - Reference, never copy. Rules, tickets, plans, and code cite a vault file by path or ADR number. They do not paste its contents.
 - The ticket skill links the ADRs and standards a ticket depends on into the ticket.
 - The implement skill reads the architecture doc and the linked ADRs in stage 1, before planning.
