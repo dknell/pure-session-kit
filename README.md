@@ -2,7 +2,7 @@
 
 > 🧮 **Cost to read this: about 4,600 words, or 20 minutes and a coffee.** ☕ Your agent does not read this file. It reads `BLUEPRINT.md`, about 6,500 tokens, and will be done before the coffee cools.
 
-I was talking to a friend the other day about the setup I use to run coding agents. How little I have to touch it. How a ticket goes in one end and a reviewed PR comes out the other. He was impressed, and then he asked how to build it himself.
+I was talking to a friend the other day about the setup I use to run coding agents. A ticket goes in one end and a reviewed PR comes out the other, and I am not in the middle. He was impressed, and then he asked how to build it himself.
 
 I started explaining. Twenty minutes in I was still explaining. Hooks, worktrees, the ticket format, the docs vault, why the reviewer runs in a fresh session. It is not complicated once it is built, but it is a lot of small pieces, and every one of them exists because something went wrong without it.
 
