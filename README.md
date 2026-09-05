@@ -2,6 +2,12 @@
 
 > 🧮 **Cost to read this: about 4,600 words, or 20 minutes and a coffee.** ☕ Your agent does not read this file. It reads `BLUEPRINT.md`, about 6,500 tokens, and will be done before the coffee cools.
 
+I was talking to a friend the other day about the setup I use to run coding agents. How little I have to touch it. How a ticket goes in one end and a reviewed PR comes out the other. He was impressed, and then he asked how to build it himself.
+
+I started explaining. Twenty minutes in I was still explaining. Hooks, worktrees, the ticket format, the docs vault, why the reviewer runs in a fresh session. It is not complicated once it is built, but it is a lot of small pieces, and every one of them exists because something went wrong without it.
+
+So I stopped and wrote it down instead. This is that write up. The idea, the pieces, and a way for your own agent to build all of it, adapted to whatever tools and process you already have. That is the Pure Session Kit.
+
 I have a rule for myself now when I hand work to a coding agent. Whether it is Claude Code, Codex, or whatever tool you use, the rule is the same: if I have to talk to the session after I start it, I did something wrong before I started it.
 
 I call this a pure session. ✨ One goal, everything the agent needs loaded up front, and then I get out of the way.
