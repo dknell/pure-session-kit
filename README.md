@@ -178,11 +178,11 @@ The ticket says what to build. Something else has to say why things are the way 
 
 If that lives in the standing rules file, the file gets huge and every session pays for all of it. If it lives in people's heads, the agent guesses. If it lives in a wiki the agent cannot search, same result.
 
-So it lives in a vault. Plain markdown files, tracked in git, in their own repo that sits next to the code. Mine is an [Obsidian](https://obsidian.md) vault, but you do not need Obsidian. You need markdown on disk that grep can search in milliseconds. It has one architecture doc that every session reads first, a folder of architecture decision records, a folder of runbooks, and a folder of standards. Every decision that matters has an ADR with a number. Tickets link to the ADRs they depend on. Code comments cite the ADR that explains a strange looking choice. PR bodies cite them too.
+So it lives in a vault. Plain markdown files, tracked in git, in their own repo that sits next to the code. Mine is an [Obsidian](https://obsidian.md) vault, but you do not need Obsidian. You need markdown on disk that ripgrep can search in milliseconds, which is the same tool the agent uses to search code. It has one architecture doc that every session reads first, a folder of architecture decision records, a folder of runbooks, and a folder of standards. Every decision that matters has an ADR with a number. Tickets link to the ADRs they depend on. Code comments cite the ADR that explains a strange looking choice. PR bodies cite them too.
 
 Two reasons it is a separate repo and not a `docs/` folder. PRs to the code repo stay lean, with no doc churn mixed into the diff. And one vault can serve several repos.
 
-The agent does not load any of this at session start. It gets one pointer in the standing rules: here is the vault, read the architecture doc first, and if the vault is missing, stop. After that it searches the vault the way it searches code, with grep, and reads only the file it needs.
+The agent does not load any of this at session start. It gets one pointer in the standing rules: here is the vault, read the architecture doc first, and if the vault is missing, stop. After that it searches the vault the way it searches code, with ripgrep, and reads only the file it needs.
 
 That is how my standing rules stay under 200 lines. Everything that would have gone in there went into the vault instead, where it costs nothing until it is needed.
 
