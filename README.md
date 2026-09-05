@@ -12,7 +12,9 @@ I have a rule for myself now when I hand work to a coding agent. Whether it is C
 
 I call this a pure session. ✨ One goal, everything the agent needs loaded up front, and then I get out of the way.
 
-This article is the system I use to make that work. It goes like this: why the context window matters and how to keep an eye on it, what a session needs before it starts, how to keep it small while it runs, why the ticket is the spine of all of it, and where the why lives so the rules file stays small. Then how to get all of it in your own repo: two prompts you paste into your own agent, one that cleans your current setup and one that builds the kit. The blueprint the agent builds from is a separate file in this repo, `BLUEPRINT.md`, for the agent to read, not you.
+This article is the system I use to make that work. It goes like this: [why the context window matters](#context) and [how to keep an eye on it](#gauge), [what a session needs before it starts](#before), [how to keep it small while it runs](#during), [why the ticket is the spine of all of it](#ticket), and [where the why lives](#vault) so the rules file stays small. Then [how to get all of it in your own repo](#build): two prompts you paste into your own agent, one that cleans your current setup and one that builds the kit. The blueprint the agent builds from is a separate file in this repo, `BLUEPRINT.md`, for the agent to read, not you.
+
+<a id="context"></a>
 
 ## Why the context window is the whole game 🧠
 
@@ -32,6 +34,8 @@ For what it is worth, here is where I draw the line. My window is 1M tokens and 
 
 Which raises the obvious question: how do I know what percent I am at?
 
+<a id="gauge"></a>
+
 ## Keep the number on screen 📊
 
 I have a bar at the bottom of my terminal that shows my context usage at all times. Repo name, a little progress bar, a percentage. Green while it is low, then yellow, then red. I glance at it the way you glance at a fuel gauge.
@@ -48,9 +52,11 @@ In Claude Code this is one line. Type it and it writes the script and the settin
 
 Other tools vary. Some show a token count in their footer. Some only show it when you ask. If yours has nothing, make a habit of running the context command at every natural break, like after a plan is written or a test run finishes.
 
-And if you plan to run the kit prompt at the end of this article, you can skip this step entirely. The kit includes the gauge, and it leaves yours alone if you already have one.
+And if you plan to run [the kit prompt](#build) at the end of this article, you can skip this step entirely. The kit includes the gauge, and it leaves yours alone if you already have one.
 
 Now you can see the number. The rest of this is about keeping it low.
+
+<a id="before"></a>
 
 ## What a pure session looks like 🎯
 
@@ -62,7 +68,9 @@ That usually means:
 
 **The standing rules are already on disk.** In Claude Code that is CLAUDE.md. In Codex it is AGENTS.md. This is where conventions live: branch naming, commit format, what never to touch, how to report back. The agent reads it at the start of every session, so I never have to explain it in chat.
 
-**The decisions are already made.** If I know the agent is going to hit a fork in the road, I answer it in the prompt. And I tell it what to do when it hits one I did not predict: state the assumption, keep going, and flag it in the final report. An agent that stops to ask me a question is an agent that is now waiting on a human, and my answer costs context.
+**The why is on disk too.** Architecture, decisions, runbooks, coding standards. They live in a searchable vault of markdown next to the code, not in the rules file. The rules point at it. Nothing copies it. That is what keeps the rules file small. More on the vault [below](#vault).
+
+**The decisions are already made.** Most of them live in [the ticket](#ticket). If I know the agent is going to hit a fork in the road, I answer it in the prompt. And I tell it what to do when it hits one I did not predict: state the assumption, keep going, and flag it in the final report. An agent that stops to ask me a question is an agent that is now waiting on a human, and my answer costs context.
 
 **The guardrails are mechanical, not conversational.** 🚧 Hooks are the big one here. A hook is a script that runs before or after a tool call and can block it. If the agent must never commit on main, I do not write "please don't commit on main" in the prompt and hope. I write a hook that refuses the commit. The agent does not have to remember the rule, and the rule does not take up space in its memory. It just fails closed.
 
@@ -83,6 +91,8 @@ For reference, my own sessions start at around 32k tokens with all of that loade
 So about 14k of the 32k is the harness itself. Every Claude Code session pays that whether you configure anything or not. The other 18k is what I actually put there to steer the run: the rules, the memory, the agents, the skills. That is the number I manage. It is under 2 percent of the window, and it is the most valuable 2 percent in the session, because it is the part the agent reads before it does anything else.
 
 The goal is to keep the rest of the run from growing much past what the actual work requires.
+
+<a id="during"></a>
 
 ## Ways to keep the window small during the run 🪟
 
@@ -140,9 +150,11 @@ But they are what you reach for after the window got messy. The whole point of a
 
 ## How to check yourself 🔍
 
-The status bar tells you how full the window is while you work. `/context` tells you why. Run it in Claude Code at the end of a session. It shows you what filled the window: system prompt, tool definitions, memory files, messages, tool output. If messages and tool output dominate, ask what you could have front loaded, delegated to a subagent, or filtered.
+[The status bar](#gauge) tells you how full the window is while you work. `/context` tells you why. Run it in Claude Code at the end of a session. It shows you what filled the window: system prompt, tool definitions, memory files, messages, tool output. If messages and tool output dominate, ask what you could have front loaded, delegated to a subagent, or filtered.
 
 The question I ask after every run is simple. What did I have to tell it that it should have already known? Then I move that thing into a file, a hook, or a skill, and the next session starts a little purer than the last.
+
+<a id="ticket"></a>
 
 ## The ticket runs the whole thing 🎟️
 
@@ -158,13 +170,15 @@ I moved to [Linear](https://linear.app) and the workflow opened up. Responses co
 
 I am not saying you have to switch. I am saying the ticket is the spine of this whole approach, and if your agent spends 20k tokens just reading a ticket, you feel that in every session. Pick the system that gives the agent the least to carry.
 
+<a id="vault"></a>
+
 ## The vault: where the why lives 📚
 
 The ticket says what to build. Something else has to say why things are the way they are. What the stack is. Why we picked Postgres over the other thing. How to roll back a deploy. What the coding standards are for each language in the repo.
 
 If that lives in the standing rules file, the file gets huge and every session pays for all of it. If it lives in people's heads, the agent guesses. If it lives in a wiki the agent cannot search, same result.
 
-So it lives in a vault. Plain markdown files, tracked in git, in their own repo that sits next to the code. Mine is an Obsidian vault, but you do not need Obsidian. You need markdown on disk that grep can search in milliseconds. It has one architecture doc that every session reads first, a folder of architecture decision records, a folder of runbooks, and a folder of standards. Every decision that matters has an ADR with a number. Tickets link to the ADRs they depend on. Code comments cite the ADR that explains a strange looking choice. PR bodies cite them too.
+So it lives in a vault. Plain markdown files, tracked in git, in their own repo that sits next to the code. Mine is an [Obsidian](https://obsidian.md) vault, but you do not need Obsidian. You need markdown on disk that grep can search in milliseconds. It has one architecture doc that every session reads first, a folder of architecture decision records, a folder of runbooks, and a folder of standards. Every decision that matters has an ADR with a number. Tickets link to the ADRs they depend on. Code comments cite the ADR that explains a strange looking choice. PR bodies cite them too.
 
 Two reasons it is a separate repo and not a `docs/` folder. PRs to the code repo stay lean, with no doc churn mixed into the diff. And one vault can serve several repos.
 
@@ -175,6 +189,8 @@ That is how my standing rules stay under 200 lines. Everything that would have g
 A note on hosted tools. Notion is a fine place for humans to write docs. It is a poor place for an agent to read them. Every call through its MCP comes back heavy and the search is weak, so the agent spends tokens finding the doc instead of reading it. If your docs live there today, export them to markdown and let the vault be the copy the agent uses.
 
 The kit builds this too. If you already have docs, it wires them in. If you have nothing, it creates the skeleton and writes a first draft of the architecture doc and the tech stack from your repo, marked as drafts for you to correct.
+
+<a id="build"></a>
 
 ## Build your own Pure Session Kit 🧰
 
@@ -252,6 +268,6 @@ Fresh session two:
 /orchestrate-work <TICKET-ID>
 ```
 
-That session becomes the orchestrator. It cuts the worktree, plans, shows you the plan, implements after you approve, self reviews in a fresh context, opens the PR, waits for you to merge, and cleans up. Your two touches are approving the plan and merging the PR. If a worker hits something unsafe or outside the ticket, it stops and shows you instead of pushing through. That is by design. Everything else, watch the gauge and keep your hands off the keyboard.
+That session becomes the orchestrator. It cuts the worktree, plans, shows you the plan, implements after you approve, self reviews in a fresh context, opens the PR, waits for you to merge, and cleans up. Your two touches are approving the plan and merging the PR. If a worker hits something unsafe or outside the ticket, it stops and shows you instead of pushing through. That is by design. Everything else, watch [the gauge](#gauge) and keep your hands off the keyboard.
 
 Where you had to step in, and where the number climbed, is what you fix next. If your agent is not Claude Code, the build report from Step 2 lists the exact commands to use instead.
