@@ -199,8 +199,7 @@ Build me a Pure Session Kit for this repository.
 
 - First identify which agent you are. The blueprint's examples are written for Claude Code. If that is you, use them. If you are Codex or any other agent, fetch your own current documentation before you write anything, and treat it as the authority over the blueprint's examples. Then, for each of the six pieces: if you have a one to one equivalent, build it. If you do not, work out the proper way to get the same behavior in your tool and build that. If you cannot get the same behavior with confidence, do not improvise. Stop, tell me exactly where the gaps are and what your options are, and let me decide.
 - Once you have that mapping, tell me what each piece maps to before you build it.
-- Inventory this repo before writing anything. Use its real test, lint, and build commands. Do not overwrite existing config. Extend it.
-- Detect the ticketing system from the repo, its config, or any MCP servers you have available. If there is one, wire the start and close skills to it so a session can begin from a ticket ID and close the ticket when the work merges. If there is none, say so and leave a clearly marked placeholder.
+- Detect the environment exactly as the blueprint's "Detect your environment" section lists: version control and its host, the default branch, the ticketing system, the real test and build commands, the secrets tool, and the workspace. Report the full mapping before you write anything. Do not overwrite existing config. Extend it.
 - Build all six pieces the way the blueprint describes them, adapted to what you found here. The blueprint is the pattern. This repo is the truth.
 - Name the skills exactly new-task, delegate, orchestrate-work, close-session, and memory-vacuum, and the subagents exactly researcher, log-triage, implementer, orchestrate-implementer, and reviewer, exactly as the blueprint names them. Build each one to the spec in the blueprint: same inputs, same steps, same outputs, same never rules. If your tool invokes skills differently, tell me the exact commands in your report.
 - Check for a persistent context window indicator. If one is already configured, leave it alone. If not and your tool supports one, set it up as described in the blueprint's "Plus the gauge" section.
@@ -221,7 +220,7 @@ Fresh session one:
 /new-task <a sentence or two about the change>
 ```
 
-It checks for duplicates, writes the story and acceptance criteria, creates the ticket, and prints the ID. Close the session.
+This is the one session where questions are the point. It reads the relevant code, then interviews you: goal, done criteria, edge cases, what is out of scope, anything touching data or security. Answer everything. It writes the ticket, checks that nothing is left to guess, creates it, and prints the ID. Close the session.
 
 Fresh session two:
 
@@ -229,6 +228,6 @@ Fresh session two:
 /orchestrate-work <TICKET-ID>
 ```
 
-That session becomes the orchestrator. It cuts the worktree, plans, shows you the plan, implements after you approve, self reviews in a fresh context, opens the PR, waits for you to merge, and cleans up. Your two touches are approving the plan and merging the PR. Everything else, watch the gauge and keep your hands off the keyboard.
+That session becomes the orchestrator. It cuts the worktree, plans, shows you the plan, implements after you approve, self reviews in a fresh context, opens the PR, waits for you to merge, and cleans up. Your two touches are approving the plan and merging the PR. If a worker hits something unsafe or outside the ticket, it stops and shows you instead of pushing through. That is by design. Everything else, watch the gauge and keep your hands off the keyboard.
 
 Where you had to step in, and where the number climbed, is what you fix next. If your agent is not Claude Code, the build report from Step 2 lists the exact commands to use instead.
