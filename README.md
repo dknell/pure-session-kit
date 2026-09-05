@@ -8,6 +8,8 @@ I started explaining. Twenty minutes in I was still explaining. Hooks, worktrees
 
 So I stopped and wrote it down instead. This is that write up. The idea, the pieces, and a way for your own agent to build all of it, adapted to whatever tools and process you already have. That is the Pure Session Kit.
 
+A word on where this sits. This is not a beginner setup. It assumes you already use a coding agent every day and you are tired of babysitting it. It is also not the end of the road. Everything here runs on your machine with you approving a plan and merging a PR. The next step is the same system with no machine and no approvals: cloud agents picking tickets off a queue and running them end to end. You cannot get there without first making the local version reliable, because an agent that needs you in the loop on your laptop needs you in the loop in the cloud too. This is the stepping stone.
+
 I have a rule for myself now when I hand work to a coding agent. Whether it is Claude Code, Codex, or whatever tool you use, the rule is the same: if I have to talk to the session after I start it, I did something wrong before I started it.
 
 I call this a pure session. ✨ One goal, everything the agent needs loaded up front, and then I get out of the way.
