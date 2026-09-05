@@ -1,12 +1,12 @@
 # The pure session: why the best agent run is the one you never talk to
 
-> 🧮 **Cost to read this: about 4,200 words, or 20 minutes and a coffee.** ☕ Your agent does not read this file. It reads `BLUEPRINT.md`, about 4,000 tokens, and will be done before the coffee cools.
+> 🧮 **Cost to read this: about 4,600 words, or 20 minutes and a coffee.** ☕ Your agent does not read this file. It reads `BLUEPRINT.md`, about 6,500 tokens, and will be done before the coffee cools.
 
 I have a rule for myself now when I hand work to a coding agent. Whether it is Claude Code, Codex, or whatever tool you use, the rule is the same: if I have to talk to the session after I start it, I did something wrong before I started it.
 
 I call this a pure session. ✨ One goal, everything the agent needs loaded up front, and then I get out of the way.
 
-This article is the system I use to make that work. It goes like this: why the context window matters and how to keep an eye on it, what a session needs before it starts, how to keep it small while it runs, and why the ticket is the spine of all of it. Then how to get all of it in your own repo: two prompts you paste into your own agent, one that cleans your current setup and one that builds the kit. The blueprint the agent builds from is a separate file in this repo, `BLUEPRINT.md`, for the agent to read, not you.
+This article is the system I use to make that work. It goes like this: why the context window matters and how to keep an eye on it, what a session needs before it starts, how to keep it small while it runs, why the ticket is the spine of all of it, and where the why lives so the rules file stays small. Then how to get all of it in your own repo: two prompts you paste into your own agent, one that cleans your current setup and one that builds the kit. The blueprint the agent builds from is a separate file in this repo, `BLUEPRINT.md`, for the agent to read, not you.
 
 ## Why the context window is the whole game 🧠
 
@@ -152,6 +152,24 @@ I moved to [Linear](https://linear.app) and the workflow opened up. Responses co
 
 I am not saying you have to switch. I am saying the ticket is the spine of this whole approach, and if your agent spends 20k tokens just reading a ticket, you feel that in every session. Pick the system that gives the agent the least to carry.
 
+## The vault: where the why lives 📚
+
+The ticket says what to build. Something else has to say why things are the way they are. What the stack is. Why we picked Postgres over the other thing. How to roll back a deploy. What the coding standards are for each language in the repo.
+
+If that lives in the standing rules file, the file gets huge and every session pays for all of it. If it lives in people's heads, the agent guesses. If it lives in a wiki the agent cannot search, same result.
+
+So it lives in a vault. Plain markdown files, tracked in git, in their own repo that sits next to the code. Mine is an Obsidian vault, but you do not need Obsidian. You need markdown on disk that grep can search in milliseconds. It has one architecture doc that every session reads first, a folder of architecture decision records, a folder of runbooks, and a folder of standards. Every decision that matters has an ADR with a number. Tickets link to the ADRs they depend on. Code comments cite the ADR that explains a strange looking choice. PR bodies cite them too.
+
+Two reasons it is a separate repo and not a `docs/` folder. PRs to the code repo stay lean, with no doc churn mixed into the diff. And one vault can serve several repos.
+
+The agent does not load any of this at session start. It gets one pointer in the standing rules: here is the vault, read the architecture doc first, and if the vault is missing, stop. After that it searches the vault the way it searches code, with grep, and reads only the file it needs.
+
+That is how my standing rules stay under 200 lines. Everything that would have gone in there went into the vault instead, where it costs nothing until it is needed.
+
+A note on hosted tools. Notion is a fine place for humans to write docs. It is a poor place for an agent to read them. Every call through its MCP comes back heavy and the search is weak, so the agent spends tokens finding the doc instead of reading it. If your docs live there today, export them to markdown and let the vault be the copy the agent uses.
+
+The kit builds this too. If you already have docs, it wires them in. If you have nothing, it creates the skeleton and writes a first draft of the architecture doc and the tech stack from your repo, marked as drafts for you to correct.
+
 ## Build your own Pure Session Kit 🧰
 
 Everything above is something you can set up in your own repo. You do not build it by hand. Your agent builds it, from this article, in two prompts run in two separate sessions. Then you test it in a third. The exact spec it builds from is `BLUEPRINT.md` in this repo. You do not need to read it. Your agent does.
@@ -193,14 +211,14 @@ Then paste this. It works in Claude Code, Codex, or any agent that can fetch a U
 ```text
 Fetch and read this file in full: https://raw.githubusercontent.com/dknell/pure-session-kit/main/BLUEPRINT.md
 
-It is the blueprint for a Pure Session Kit: a setup for running a coding agent from a ticket to a finished PR with no human interaction during the run. It defines six pieces, which are standing rules, hooks, skills, subagents, memory, and a kickoff prompt with a headless runner, plus a context gauge.
+It is the blueprint for a Pure Session Kit: a setup for running a coding agent from a ticket to a finished PR with no human interaction during the run. It defines seven pieces, which are a docs vault, standing rules, hooks, skills, subagents, memory, and a kickoff prompt with a headless runner, plus a context gauge.
 
 Build me a Pure Session Kit for this repository.
 
-- First identify which agent you are. The blueprint's examples are written for Claude Code. If that is you, use them. If you are Codex or any other agent, fetch your own current documentation before you write anything, and treat it as the authority over the blueprint's examples. Then, for each of the six pieces: if you have a one to one equivalent, build it. If you do not, work out the proper way to get the same behavior in your tool and build that. If you cannot get the same behavior with confidence, do not improvise. Stop, tell me exactly where the gaps are and what your options are, and let me decide.
+- First identify which agent you are. The blueprint's examples are written for Claude Code. If that is you, use them. If you are Codex or any other agent, fetch your own current documentation before you write anything, and treat it as the authority over the blueprint's examples. Then, for each of the seven pieces: if you have a one to one equivalent, build it. If you do not, work out the proper way to get the same behavior in your tool and build that. If you cannot get the same behavior with confidence, do not improvise. Stop, tell me exactly where the gaps are and what your options are, and let me decide.
 - Once you have that mapping, tell me what each piece maps to before you build it.
 - Detect the environment exactly as the blueprint's "Detect your environment" section lists: version control and its host, the default branch, the ticketing system, the real test and build commands, the secrets tool, and the workspace. Report the full mapping before you write anything. Do not overwrite existing config. Extend it.
-- Build all six pieces the way the blueprint describes them, adapted to what you found here. The blueprint is the pattern. This repo is the truth.
+- Build all seven pieces the way the blueprint describes them, adapted to what you found here. The blueprint is the pattern. This repo is the truth.
 - Name the skills exactly new-task, delegate, orchestrate-work, close-session, and memory-vacuum, and the subagents exactly researcher, log-triage, implementer, orchestrate-implementer, and reviewer, exactly as the blueprint names them. Build each one to the spec in the blueprint: same inputs, same steps, same outputs, same never rules. If your tool invokes skills differently, tell me the exact commands in your report.
 - Check for a persistent context window indicator. If one is already configured, leave it alone. If not and your tool supports one, set it up as described in the blueprint's "Plus the gauge" section.
 - Verify each piece: run every hook against one blocked and one allowed command and show the exit codes, list the skills and subagents to confirm they load, and report current context usage if your tool can show it.

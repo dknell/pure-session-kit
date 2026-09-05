@@ -11,12 +11,12 @@ The principles the kit exists to serve. Every piece below is in service of one o
 - Rules that must always hold are enforced by hooks that fail closed, not by words in a prompt.
 - Noisy work happens in subagents with their own context window. Only a summary returns to the main session.
 - Logs, plans, and reports go to files on disk, not into the conversation.
-- The ticket is the source of truth. A session starts from a ticket ID, references it in the branch and the PR, and closes it on merge.
+- The ticket is the source of truth for what to build. The vault is the source of truth for why things are the way they are. Both are on disk. Both are cited, never copied.
 - The context window is kept small on purpose. Tool output is trimmed, skills and tool definitions load on demand, and every session is thrown away when its goal is met.
 
 The paths are Claude Code's. Codex reads AGENTS.md instead of CLAUDE.md and has its own config directory, and other agents have their own equivalents. The pieces are the same in every tool. If yours does not have one of them, work out the closest equivalent and say what you mapped it to.
 
-The kit is six pieces, plus a gauge.
+The kit is seven pieces, plus a gauge.
 
 ## Detect your environment before you build
 
@@ -36,12 +36,53 @@ The kit is written against one setup: Claude Code, git with GitHub, Linear, and 
 
 **The secrets tool.** Encrypted files in the repo, a vault, a cloud secrets manager, plain `.env` files, or nothing. This sets the patterns the secrets guard hook blocks: the file names, the decrypt commands, and the CLI calls that would print a value. When in doubt, block more.
 
+**The docs.** Where the architecture, decisions, runbooks, and standards live today, if anywhere. Piece 1 covers what to do with what you find.
+
 **The workspace and terminal.** Whether a worktree directory already exists and where. Whether the tool can show a status line. This sets the worktree root in the rules and whether the gauge is a status line or a rule to report usage at every break.
 
-### 1. Standing rules: CLAUDE.md and rules files
+### 1. The vault: architecture, decisions, runbooks, standards
+
+The vault is where the why lives, so the standing rules can stay short. It is plain markdown, tracked in git, searchable with grep. Nothing in it loads at session start. The agent reads the one architecture doc first and then reads other files only when it needs them.
+
+**Detect before you build.** Look for docs that already exist: a sibling docs repo, a `docs/` folder, an Obsidian vault, ADRs anywhere, a wiki export. If markdown docs exist on disk, wire them in and do not restructure them. If the docs live only in a hosted tool the agent cannot grep, such as Notion or Confluence, do not make the agent search that tool at run time. Its API responses are heavy and its search is weak. Build the vault skeleton, tell the human which pages to export to markdown into it, and leave a note in the architecture doc pointing at the hosted source until that is done. If nothing exists, create the skeleton.
+
+**Location.** The recommendation is a separate git repository, cloned as a sibling directory next to the code repo. Two reasons: PRs to the code repo stay lean with no doc churn in the diff, and one vault can serve several repos. The vault is Obsidian compatible, but Obsidian is optional. Plain markdown that grep can search is the requirement. A `docs/` folder inside the repo is acceptable if the human already has one and prefers it. Either way the standing rules carry the exact path, and the session start hook checks that the path exists.
+
+**Layout.**
+
+```text
+<vault>/
+├── architecture/
+│   └── architecture.md     # the system in one doc; every session reads this first
+├── decisions/
+│   ├── 0001-record-architecture-decisions.md
+│   └── NNNN-<kebab-title>.md
+├── runbooks/
+│   └── <task>.md           # how to do one operational thing, start to finish
+└── standards/
+    ├── tech-stack.md       # languages, frameworks, versions, and why
+    └── <language-or-area>.md
+```
+
+**ADR format.** One file per decision, numbered, never renumbered. Sections: title, status (proposed, accepted, superseded by NNNN), context, decision, consequences. A changed decision gets a new ADR that supersedes the old one. The old one is never edited except to mark it superseded.
+
+**Rules the rest of the kit follows.**
+
+- The standing rules carry one pointer: the vault path, the instruction to read `architecture/architecture.md` before working, and the instruction to stop if the vault is missing.
+- Reference, never copy. Rules, tickets, plans, and code cite a vault file by path or ADR number. They do not paste its contents.
+- The ticket skill links the ADRs and standards a ticket depends on into the ticket.
+- The implement skill reads the architecture doc and the linked ADRs in stage 1, before planning.
+- Any new decision that a future reader would ask "why" about gets an ADR in the same PR, or a ticket to write one.
+- The reviewer checks for decisions in the diff that have no ADR and flags them.
+- Code comments cite the ADR that explains a non obvious choice, by number.
+
+**Bootstrap, when nothing exists.** Create the layout above. Write `architecture/architecture.md` from what the repo actually contains: the services or packages, how they talk to each other, where data lives, how it is deployed. Write `standards/tech-stack.md` from the manifests and lock files. Write ADR 0001 recording the decision to keep ADRs. Mark every generated doc as a draft at the top so the human knows to correct it. Do not invent decisions the repo does not show.
+
+### 2. Standing rules: CLAUDE.md and rules files
 
 This is the file the agent reads at the start of every session. Keep it under 200 lines. Anthropic's own guidance says longer files reduce adherence. Mine holds:
 
+- Where the vault is, the rule to read its architecture doc before working, and the rule to stop if the vault is missing. One pointer, never the contents.
 - How to report back: short bullets, `file:line` references, findings ordered by severity, and a `Next:` block that lists only what a human still has to do.
 - What to do when uncertain: state the assumption, keep going, flag it in the final report. Never stop to ask unless the action is destructive or outward facing.
 - How to keep output small: targeted commands, grep for the failure instead of dumping the log, count instead of list.
@@ -64,7 +105,7 @@ paths:
 
 If your repo already has an AGENTS.md for another tool, do not duplicate it. Make CLAUDE.md a one line import: `@AGENTS.md`.
 
-### 2. Hooks: the rules that do not need the agent to agree
+### 3. Hooks: the rules that do not need the agent to agree
 
 A hook is a script that runs at a lifecycle event and can block the action. In Claude Code you register it in `.claude/settings.json`:
 
@@ -112,7 +153,7 @@ The hooks I would not run without. Each one is a `PreToolUse` hook on `Bash` unl
 
 Hooks fire on every matching call. They cost no context until they block something, and then the cost is one line.
 
-### 3. Skills: the multi step procedures
+### 4. Skills: the multi step procedures
 
 A skill is a folder with a `SKILL.md` in it. Only the name and description sit in context until it is invoked. Mine live in `.claude/skills/<name>/SKILL.md`. The frontmatter looks like this:
 
@@ -136,9 +177,9 @@ This is the most important skill in the kit. Every other session runs with no hu
 - Takes: a sentence or two describing the change.
 - Does, in this order:
   1. Searches the ticketing system for duplicates and near duplicates. If one exists, shows it and stops.
-  2. Reads the relevant code before asking anything. Finds the files, modules, tests, and existing patterns the change will touch, so every question it asks is informed by what is actually there.
+  2. Reads the relevant code and the vault before asking anything. Finds the files, modules, tests, and existing patterns the change will touch, and the ADRs and standards that apply, so every question it asks is informed by what is actually there and what was already decided.
   3. Interviews the human. Asks about the goal, who it is for, what done looks like, edge cases, what is explicitly out of scope, what must not change, and how it should be verified. Asks about data, permissions, and anything that touches secrets, authentication, external services, or customer visible surfaces. Asks one question at a time and keeps going until nothing is left to guess.
-  4. Writes the ticket with these sections: user story, acceptance criteria written so an agent can verify each one, decisions already made, out of scope, files and areas involved, verification steps, and known risks including security concerns.
+  4. Writes the ticket with these sections: user story, acceptance criteria written so an agent can verify each one, decisions already made, related decisions as links to the ADRs and standards that apply, out of scope, files and areas involved, verification steps, and known risks including security concerns.
   5. Runs a completeness check before saving. It reads the ticket back and asks itself: could an agent implement this with zero questions? If the answer is no, it goes back to step 3.
   6. Creates the ticket using the repo's title grammar and description template. Prints the ticket ID.
 - Produces: one complete ticket. Nothing on disk.
@@ -147,7 +188,7 @@ This is the most important skill in the kit. Every other session runs with no hu
 **`/delegate implement <TICKET-ID>`**
 
 - Takes: a ticket ID.
-- Does, stage 1: reads the ticket and the relevant docs. Cuts the worktree and branch named after the ticket from fresh `main`. Writes a plan to `~/Downloads/<TICKET-ID>-plan.md` with tasks, files, and verification steps. Returns a short digest and stops for approval.
+- Does, stage 1: reads the ticket, the vault's architecture doc, and every ADR and standard the ticket links. Cuts the worktree and branch named after the ticket from fresh `main`. Writes a plan to `~/Downloads/<TICKET-ID>-plan.md` with tasks, files, and verification steps. Returns a short digest and stops for approval.
 - Does, stage 2 (after approval): dispatches the **implementer** subagent with the worktree path and the approved plan. When it returns, verifies the work, runs tests, and opens a PR that references the ticket, with a body that includes what changed and how it was verified.
 - Produces: a worktree, a plan file, atomic commits, one PR.
 - Never: merges, pushes to the default branch, works outside its worktree, or continues past a stop condition.
@@ -155,7 +196,7 @@ This is the most important skill in the kit. Every other session runs with no hu
 **`/delegate review --self`**
 
 - Takes: nothing. Runs in a ticket worktree on the current branch.
-- Does: syncs the branch with `main`, diffs against it, and reviews the diff cold, in a fresh context. Checks the diff against the ticket's acceptance criteria and scope. Looks for security problems first: secrets in the diff, injection, broken access checks, unsafe input handling, new external calls. Fixes what it can safely fix, commits the fixes, and pushes them. A security finding it cannot fix with confidence, or any change outside the ticket's scope, is a blocking finding: it says so in the audit comment and stops. Fetches every existing comment on the PR first, so it never re-raises something already discussed.
+- Does: syncs the branch with `main`, diffs against it, and reviews the diff cold, in a fresh context. Checks the diff against the ticket's acceptance criteria and scope, and against the ADRs and standards the ticket links. Flags any new decision in the diff that has no ADR. Looks for security problems first: secrets in the diff, injection, broken access checks, unsafe input handling, new external calls. Fixes what it can safely fix, commits the fixes, and pushes them. A security finding it cannot fix with confidence, or any change outside the ticket's scope, is a blocking finding: it says so in the audit comment and stops. Fetches every existing comment on the PR first, so it never re-raises something already discussed.
 - Produces: review fix commits and one audit comment on the PR listing what it found and fixed.
 - Never: submits a verdict on its own PR, merges, or runs on the default branch.
 
@@ -198,7 +239,7 @@ A worker stops when any of these are true. Stopping means: commit nothing furthe
 - A hook blocks an action. Never look for a route around a hook.
 - Anything feels wrong. If the worker is not confident the next step is safe and in scope, that is a stop.
 
-### 4. Subagents: the workers with their own memory
+### 5. Subagents: the workers with their own memory
 
 A subagent definition is a markdown file with frontmatter in `.claude/agents/<name>.md`. Only `name` and `description` are required. The body is its system prompt:
 
@@ -255,13 +296,13 @@ The five subagents in the kit. Restrict each one's tools to what it needs. A res
 - Returns: what it found, what it fixed, what it left as residual risk, and any blocking security finding.
 - Never: merges, pushes anything beyond its own review fix commits, or fixes a security problem it is not confident about. It reports those and stops. Dispatched only by `/orchestrate-work`.
 
-### 5. Memory: what survives between sessions
+### 6. Memory: what survives between sessions
 
 Auto memory is on by default in Claude Code. It lives at `~/.claude/projects/<project>/memory/`. The `MEMORY.md` index loads at session start, and the agent reads the individual memory files on demand. You do not build this. You just tell the agent, in CLAUDE.md, what is worth saving: corrections you give it, traps in the repo that fail silently, and decisions that are not derivable from the code.
 
 Then prune it. The index is capped at 200 lines. The kit includes one more skill for this, `/memory-vacuum`. It measures the memory directory, finds entries that are stale, duplicated, orphaned from the index, or already covered by the standing rules, and proposes a delete list. It deletes nothing until the human approves the list. I run it about once a week.
 
-### 6. The kickoff prompt and the headless runner
+### 7. The kickoff prompt and the headless runner
 
 This is the thing you type once. Most days it is a single command, `/orchestrate-work <TICKET-ID>`, and everything else comes from the ticket. The template below is what I write by hand when there is no ticket, and it is the shape the orchestrator uses when it briefs each worker:
 
@@ -289,7 +330,7 @@ Codex users get the same thing with `codex exec`.
 
 ### Plus the gauge
 
-Not one of the six, but the kit is not complete without it. In Claude Code the status line is a shell command in `~/.claude/settings.json` that gets session data as JSON on stdin, with the context numbers already calculated. The minimal version:
+Not one of the seven, but the kit is not complete without it. In Claude Code the status line is a shell command in `~/.claude/settings.json` that gets session data as JSON on stdin, with the context numbers already calculated. The minimal version:
 
 ```json
 {
@@ -302,4 +343,4 @@ Not one of the six, but the kit is not complete without it. In Claude Code the s
 
 Add a bar and color thresholds on top of that. Green under 50 percent, yellow under 80, red above. Put the context bar first and anything else, like cost or model name, after it.
 
-That is the whole kit. Rules, hooks, skills, subagents, memory, a kickoff prompt, and a gauge to watch it all. Every one of them exists to move something out of the conversation and into a place the agent can reach without asking you.
+That is the whole kit. A vault, rules, hooks, skills, subagents, memory, a kickoff prompt, and a gauge to watch it all. Every one of them exists to move something out of the conversation and into a place the agent can reach without asking you.
