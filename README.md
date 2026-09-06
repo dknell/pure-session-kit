@@ -198,6 +198,10 @@ The kit builds this too. If you already have docs, it wires them in. If you have
 
 Everything above is something you can set up in your own repo. You do not build it by hand. Your agent builds it, from this article, in two prompts run in two separate sessions. Then you test it in a third. The exact spec it builds from is `BLUEPRINT.md` in this repo. You do not need to read it. Your agent does.
 
+One thing before you start. For these two prompts, use the most capable model your tool offers, with reasoning effort turned all the way up. Do not economize here. You are building the guardrails once, and everything after runs inside them.
+
+That is also where the savings come from. Once the rules, hooks, and specs exist, most of the daily work can run on cheaper models, because the system is doing the thinking the model used to do. The parts that still deserve a strong model are the ones where judgment matters: writing the ticket, writing the plan, and reviewing the PR. The parts that do not: carrying out an approved plan, triaging a log, sweeping worktrees. The kit sets a model tier per subagent for exactly this reason, and you can lower them further once the system has proven itself on a few tickets.
+
 ### Step 1: clean house first 🧹
 
 Do not build the kit on top of a messy setup. If your memory files are stale, your instruction file is 600 lines, and you have four MCP servers you have not used since March, the kit inherits all of that on day one.

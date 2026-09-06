@@ -259,6 +259,8 @@ sentence. Return nothing else.
 
 The five subagents in the kit. Restrict each one's tools to what it needs. A researcher that cannot edit files cannot wander off and edit files.
 
+Set a model tier per subagent, and make each tier a single setting the human can change in one place. Three tiers are enough. The strongest model with high reasoning effort where judgment matters: the ticket skill, stage 1 of implement where the plan is written, and the reviewer. A mid tier where the work is well specified: the implementer carrying out an approved plan, the orchestrator, the researcher. The cheapest tier where the task is mechanical: log triage, the close skill, the memory vacuum measurements. Never hard code a model name into a skill or agent body. Put it in the frontmatter or the shared config so it can be changed without editing the spec.
+
 **researcher**
 
 - Tools: Read, Grep, Glob. Read only.
